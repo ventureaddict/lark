@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -16,7 +16,7 @@ model User {
   name        String
   password    String
   avatar      String?
-  preferences String? // JSON stored as text
+  preferences Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -34,7 +34,7 @@ model UserCouple {
   userId           String
   partnerId        String
   relationshipStart DateTime?
-  preferences      String? // JSON stored as text
+  preferences      Json?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -51,7 +51,7 @@ model Conversation {
   id        String   @id @default(cuid())
   userId    String
   coupleId  String?
-  context   String? // JSON stored as text
+  context   Json?
   startedAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -84,8 +84,8 @@ model Plan {
   coupleId       String?
   title          String
   description    String?
-  venues         String   // Array of venue objects (JSON as text)
-  timeline       String   // Timeline with timing (JSON as text)
+  venues         Json     // Array of venue objects
+  timeline       Json     // Timeline with timing
   budget         Float?
   status         String   @default("draft") // draft | confirmed | completed
   scheduledFor   DateTime?
@@ -105,8 +105,8 @@ model Venue {
   foursquareId   String? @unique
   name           String
   category       String
-  location       String  // lat, lng, address (JSON as text)
-  metadata       String? // hours, photos, etc (JSON as text)
+  location       Json    // lat, lng, address
+  metadata       Json?   // hours, photos, etc
   rating         Float?
   priceLevel     Int?
   createdAt      DateTime @default(now())
