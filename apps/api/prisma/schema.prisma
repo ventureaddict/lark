@@ -1,0 +1,159 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  password    String
+  avatar      String?
+  preferences String? // JSON stored as text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  conversations Conversation[]
+  userCouples   UserCouple[]
+  bookings      Booking[]
+  ratings       VenueRating[]
+
+  @@map("users")
+}
+
+model UserCouple {
+  id               String    @id @default(cuid())
+  userId           String
+  partnerId        String
+  relationshipStart DateTime?
+  preferences      String? // JSON stored as text
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relationships
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+  plans        Plan[]
+
+  @@unique([userId, partnerId])
+  @@map("user_couples")
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  userId    String
+  coupleId  String?
+  context   String? // JSON stored as text
+  startedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  couple  UserCouple? @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  messages Message[]
+  plans   Plan[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String   // 'user' | 'assistant' | 'system'
+  content        String
+  tokensUsed     Int?
+  createdAt      DateTime @default(now())
+
+  // Relationships
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Plan {
+  id             String   @id @default(cuid())
+  conversationId String
+  coupleId       String?
+  title          String
+  description    String?
+  venues         String   // Array of venue objects (JSON as text)
+  timeline       String   // Timeline with timing (JSON as text)
+  budget         Float?
+  status         String   @default("draft") // draft | confirmed | completed
+  scheduledFor   DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  couple       UserCouple?  @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
+
+  @@map("plans")
+}
+
+model Venue {
+  id             String  @id @default(cuid())
+  foursquareId   String? @unique
+  name           String
+  category       String
+  location       String  // lat, lng, address (JSON as text)
+  metadata       String? // hours, photos, etc (JSON as text)
+  rating         Float?
+  priceLevel     Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  bookings Booking[]
+  ratings  VenueRating[]
+
+  @@map("venues")
+}
+
+model Booking {
+  id           String   @id @default(cuid())
+  planId       String
+  venueId      String
+  userId       String
+  bookingType  String   // restaurant | event | activity
+  externalId   String?  // ID from booking platform
+  status       String   @default("pending") // pending | confirmed | cancelled
+  scheduledFor DateTime
+  guests       Int      @default(2)
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relationships
+  plan  Plan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  venue Venue @relation(fields: [venueId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@map("bookings")
+}
+
+model VenueRating {
+  id              String    @id @default(cuid())
+  userId          String
+  venueId         String
+  rating          Int       // 1-5 stars
+  review          String?
+  dateExperienced DateTime?
+  createdAt       DateTime  @default(now())
+
+  // Relationships
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venue Venue @relation(fields: [venueId], references: [id])
+
+  @@unique([userId, venueId])
+  @@map("venue_ratings")
+}
