@@ -1,9 +1,9 @@
 [build]
-builder = "NIXPACKS"
-buildCommand = "cd apps/api && npm ci && npm run build && npx prisma generate && npx prisma db push"
+builder = "NIXPACKS" 
+buildCommand = "cd apps/api && npm ci && npm run build && npx prisma generate"
 
 [deploy]
-startCommand = "cd apps/api && npm run start:prod"
+startCommand = "cd apps/api && npx prisma db push && npm run start:prod"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
