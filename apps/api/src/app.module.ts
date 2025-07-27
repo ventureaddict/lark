@@ -32,5 +32,6 @@ class HealthController {
     ChatModule,
     VenuesModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}
